@@ -10,6 +10,8 @@ This workshop uses some of the tidyverse packages.  Install this metapackage if 
 install.packages("tidyverse")
 ```
 
+We'll also use a few other small packages that can be easily installed during the workshop.
+
 
 ## Feedback
 
