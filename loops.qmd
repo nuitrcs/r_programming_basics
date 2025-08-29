@@ -1,0 +1,430 @@
+---
+title: "Loops"
+format: html
+editor_options: 
+  chunk_output_type: console
+---
+
+# Setup
+
+```{r}
+library(tidyverse)
+```
+
+# Programming Intro
+
+R is a full programming language.  This means that we can do a lot of things with R that go beyond issuing specific commands to accomplish data analysis tasks.  We are going to learn how to use/apply some techniques and concepts that exist across program languages in R.
+
+You may not have an immediate application for every technique, but knowing that they exist will make it easier to solve problems with R when you encounter them in the future.
+
+## Loops
+
+Loops are a general programming concept.  They let us repeat the same action multiple times.  
+
+We already do this automatically in R whenever we use vectorized functions -- functions that operate on each element of a vector.  For example:
+
+```{r}
+sqrt(1:10)
+```
+
+Repeats the same action -- computing the square root -- multiple times.  Loops provide another option for when we need to do something more complex.  
+
+You may see things indicating that you shouldn't write loops in R because they are slow.  While this can be true, it isn't necessarily.  And unless you're processing really large datasets, slightly slower code is unlikely to be an issue for you.  Start by writing code that works and makes sense to you, and then you can always work on making it faster later.
+
+Note: Many for loops in R could be rewritten using a custom function and map or apply functions.  One approach is not necessarily better than another.
+
+
+# For Loops
+
+A "for" loop is so named because it uses the keyword "for" and does some action "for each element" of an object, like a vector, or rows of a data frame.  For loops are designed to run a known and specified number of times.
+
+Some situations where for loops can be useful in R include:
+
+* Processing multiple data files (looping through all files in a directory)
+* Performing a similar analysis for multiple subsets of a data set
+* Running simulations that need to be repeated multiple times
+* Processing non-rectangular data stored in lists
+
+When not to use a for loop:
+
+* A vectorized function already exists: don't write a loop to compute the `log()` of each element in a vector -- the `log()` function can already do that for you!
+
+There are often alternative ways to accomplish things in R without using a loop, but they can be useful.  Understanding loops will also help you understand more complicated iteration functions as well.
+
+
+## For Loop Syntax
+
+```{r}
+for (i in 1:5) {
+  print(i)
+}
+```
+
+Here are the parts:
+
+* `for` defines the loop.  It's technically a function, which is why it is followed by `()`.  By convention (mostly from other programming languages), we often type a space between `for` and `(`  though, but you don't have to.
+* `()` are the parentheses that go with the `for` function.
+* `i` is the name of a variable that we're making (pick any name you want).  This variable will be assigned a new value for each iteration of the loop.  Unlike some other programming languages, this variable will exist after the loop is run.  For example, after the loop above is run, `i` will exist in the environment with the value of 5.
+* `in` is a keyword that is part of the construct of a for loop.  It separates the variable on the left from the values it will take on to the right.  There must be a space on each side of `in`.
+* `1:5` is a shorthand way to define a vector with the values 1, 2, 3, 4, 5.  Other values can be used here, but they need to be something that can be treated as a vector -- this can be an actual vector (such as created with `c()`), a column of a data frame, or a list.  
+* `{...}` - these are called "curly braces" and they define a block of code.  They are a way of grouping multiple code statements together.  It defines the full set of statements that should be run for each iteration of the loop.
+* `print(i)` - this is a simple command within the loop to print out the value of `i` each time the loop runs.  Multiple statements can be included here inside `{}`
+
+Another example:
+
+```{r}
+for (animal_type in c("cat", "dog", "fish")) {
+  print(animal_type)
+}
+```
+
+Note that the variable defined in the loop keeps the last value when the loop completes:
+
+```{r}
+animal_type
+```
+
+
+## TRY IT
+
+Complete the code below so that the loop prints out a triangle of * like:
+
+```
+*
+**
+***
+****
+*****
+```
+
+```{r, eval=FALSE}
+# run this code to see what it does:
+cat(rep('*', 3), '\n', sep='')
+
+for (FILL_IN_SOMETHING_HERE) {
+  cat(rep('*', FILL_IN_SOMETHING_HERE), '\n', sep='')
+}
+```
+
+Challenge: Create this output, or create your own fun pattern.  Can you make a long pattern that repeats?
+
+```
+*
+**
+***
+****
+*****
+****
+***
+**
+*
+```
+
+## For Loop Patterns
+
+### Pattern 1: Count Iterations
+
+One way to use a for loop is simply repeat the same action multiple times.  The values that you iterate through might not be of direct interest.
+
+```{r}
+# install.packages("praise")
+
+for (i in 1:10) {
+  print(praise::praise())
+}
+```
+
+Here, we didn't use the value of `i` at all. 
+
+
+### Pattern 2: Use the Values Directly
+
+Another way to use a for loop is to loop through values that we need to do something with directly
+
+```{r}
+list.files(pattern = "*.qmd")
+
+for (filename in list.files(pattern = "*.qmd")) {
+  nlines <- length(read_lines(filename))
+  print(paste("Filename", filename, "has", nlines, "lines"))
+}
+```
+
+Here we are looping through the values in a vector because we want to use each value in turn.
+
+### Pattern 3: Index another Object
+
+starwars is a dataset that is loaded with the tidyverse package (it's a little out of date).  The films column contains a list of the films that each character appears in.  We want to add a column to the data frame that is the count of the number of films for each character.
+
+```{r}
+starwars
+starwars$films
+
+# initialize the new column
+starwars$n_films <- NA
+
+# loop through values 
+for (i in 1:nrow(starwars)) {
+  ## double brackets to get the vector of films for each row [[]]
+  ## because films is a list column
+  starwars$n_films[i] <- length(starwars$films[[i]]) 
+}
+starwars
+```
+
+Here we used `i` in two different places -- to get the element we needed from the data frame and to set the value of a different column.
+
+## TRY IT
+
+Using the files in "data/olympics/", loop through and open each csv file.  Create a data set with each file name and the number of rows of data (not lines) in that file.  There's some code to get you started.
+
+```{r, eval=FALSE}
+data_files <- list.files("data/olympics", 
+                         pattern = "*.csv",
+                         full.names = TRUE)
+
+results <- data.frame(file = data_files, 
+                      nrows = NA)
+
+for (FILL_IN_HERE) {
+  # read in the file as a csv
+  
+  # update the correct row of "results" with the number of rows of data in the file
+  
+}
+```
+
+
+## TRY IT: Challenge
+
+Using the full medals data set, write one file for each country that has one medals, with just the rows of data for that country (and the header).
+
+Note: a directory/folder must exist on your computer before you can write files to it.
+
+```{r}
+medals <- read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2024/2024-08-06/olympics.csv")
+
+
+```
+
+
+## Nested Loops
+
+We can nest loops inside each other.  For example, to produce the star pattern above:
+
+```{r}
+for (i in 1:5) {
+  for (j in 1:i) {  # use outer loop i as endpoint for this loop
+    cat("*")
+  }
+  cat("\n")
+}
+```
+
+Nesting loops can be useful if you need to loop through both rows and columns of a data frame, or through multiple levels of a list.
+
+
+# Lists
+
+Unlike a vector (which must contain simple elements all of the same type), a list in R can hold different types of elements, including other lists, data frames, vectors, etc.  It can be used to store hierarchical data.  
+
+```{r}
+my_list <- list(df = mtcars, 
+                first_name = "Bob",
+                ages = c(45, 23, 37),
+                another_list = list(a = 1, b = c(4, 2, 0, 13)))
+my_list
+```
+
+```{r, eval=FALSE}
+View(my_list)
+```
+
+
+If the elements in a list are named (like above), the `$` syntax can be used to access the elements
+
+```{r}
+my_list$first_name
+```
+
+Elements can also be accessed by their index:
+
+```{r}
+my_list[2]
+```
+
+Note that when this prints, it shows `$first_name` at the top.  This is a sublist.  To 
+
+```{r}
+class(my_list[2])
+```
+
+To actually extract the element at the given position, we use double brackets:
+
+```{r}
+my_list[[2]]
+```
+
+For nested lists, you might see multiple set of brackets or `$`:
+
+```{r}
+# first row of the data frame
+my_list[[1]][1,]
+
+# first element of the list in the 4th position
+my_list[[4]][[1]]
+
+# mpg column of data frame called df
+my_list$df$mpg
+```
+
+
+## TRY IT
+
+Write an expression to retrieve the value 13 out of `my_list`. 
+
+```{r}
+
+```
+
+
+
+# While Loops
+
+While loops are used in situations where we need to repeat an action until a specific condition is met, rather than doing it a specified number of times.  
+
+Common use cases in R for while loops are:
+
+* When optimizing some process until the improvement drops below some threshold
+* Web scraping: keeping a list of new links and collecting the pages until everything has been collected
+
+While loops can be a bit trickier to work with because if not written correctly, they will run forever (or until your computer is out of memory).  Use the red stop button that appears in the upper right of the R console in RStudio to stop a running process if needed.
+
+## Syntax
+
+Example of a while loop:
+
+```{r}
+# output that we're going to change
+result <- 1 
+
+# initial value for the loop
+x <- 10
+
+while (x > 0) {  # loop only runs when this is true
+  result <- result * x
+  # something that will potentially change x, so the loop can stop eventually
+  x <- x - 1
+}
+
+result
+```
+
+* `while` is the keyword for the loop
+* `x > 10` is the condition that has to be TRUE for the loop to execute.  It's evaluated at the start of each iteration.  If it's not TRUE, the loop stops executing
+* `result <- result * x`: an example of what we want the loop to be doing
+* `x <- x - 1`: a while loop should contain some statement that at least could change something so that the loop stops running
+
+Note: the example above could also be a for loop, or you should really use the `factorial()` function.  It's just an example of the syntax.
+
+## Example: Random Walk
+
+How long can we go on a random walk before we get out of bounds.  Let's start a 0, and then randomly add -1, 0, or 1 each time.  How long will we go until we get out of bounds at -6 or 6 (we're just picking the out of bounds)?
+
+```{r}
+# keep track of rounds
+round <- 0
+
+current_position <- 0
+
+while (abs(current_position) < 6) {
+  round <- round + 1
+  current_position <- current_position + sample(c(-1, 0, 1), 1)
+}
+
+round
+```
+
+We could combine this with a for loop to repeat it multiple times (here, 5 times):
+
+```{r}
+result <- rep(NA, 5)
+
+for (i in 1:5) {
+  round <- 0
+  current_position <- 0
+  while (abs(current_position) < 10) {
+    round <- round + 1
+    current_position <- current_position + sample(c(-1, 0, 1), 1)
+  }
+  result[i] <- round
+}
+result
+```
+
+We could store the path each time so that we could plot them later.  We need to store the results in a list because each vector will be a different length.
+
+```{r}
+result <- vector("list", 5)  # makes an empty list
+
+for (i in 1:5) {
+  path <- c(0)
+  current_position <- 0
+  while (abs(current_position) < 6) {
+    current_position <- current_position + sample(c(-1, 0, 1), 1)
+    path <- c(path, current_position)
+  }
+  result[[i]] <- path
+}
+result
+```
+
+```{r}
+# get longest path
+max_length <- max(sapply(result, length))
+
+# set up a plot
+plot(x=1, y=0, 
+     xlim = c(0, max_length * 1.1), 
+     ylim = c(-6, 6),
+     xlab = NA, ylab = NA)
+abline(a=5, b=0, col="lightgray")
+abline(a=-5, b=0, col="lightgray")
+
+color_list <- c("#9e0142","#f46d43","#abdda4","#3288bd","#5e4fa2")
+
+# add lines to the plot
+for (i in 1:length(result)) {
+  lines(result[[i]], 
+        col = color_list[i],
+        lwd=2)
+}
+
+```
+
+
+## TRY IT
+
+Write a while loop to see how many coin flips it takes to get 5 "heads".
+
+```{r}
+# this code will generate a random "heads" or "tails"
+sample(c("heads", "tails"), 1)
+
+
+```
+
+Challenge: Repeat the above many times (with another loop) and then plot the distribution of the results.  What is the most likely number of flips required to get 5 heads?
+
+
+
+
+
+
+
+
+
+
+
+
+

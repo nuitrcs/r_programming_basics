@@ -1,0 +1,128 @@
+---
+title: "If/Else"
+format: html
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r}
+library(tidyverse)
+```
+
+
+# If/Else Statements
+
+When we are writing loops or function, it can be useful to take different actions in response to different values or situations.  That's where if/else statements come in.  
+
+You may be familiar with the `ifelse()` function, which can work with vectors:
+
+```{r}
+ages <- c(16, 17, 18, 19, 20, 21, 22, 23)
+
+# ifelse(conditional test, value if true, value if false)
+
+ifelse(ages >= 18, "adult", "child")
+```
+
+When we're working in a loop or a function, we may want to do more than just return one of two different values.  
+
+```{r, eval=FALSE}
+if (conditional test) {
+  do_something()
+} else {
+  do_something_else()
+}
+```
+
+Example:
+
+```{r}
+x <- sample.int(10, 1) # random integer 1-10
+print(paste("x is", x))
+
+if (x >= 9) {
+  print("Winner!")
+} else {
+  print("Try again")
+}
+```
+
+Note that the condition with `if()` evaluates to a **single** TRUE or FALSE value, not a vector of values.
+
+The `else()` part is optional:
+
+```{r}
+x <- sample.int(10, 1) # random integer 1-10
+print(paste("x is", x))
+
+if (x >= 9) {
+  print("Winner!")
+}
+```
+
+
+## TRY IT
+
+Write a function that returns the square root of a number.  Check the value of the input, and if it's negative, print "That's not real!".  Only return an answer if the supplied value is >= 0.
+
+```{r}
+
+```
+
+
+## TRY IT
+
+Write a for loop to print a welcome message to each name in a vector.  If you encounter a missing value, ignore it (don't print a message).
+
+Note: the command `next` ends the current iteration of the loop and moves on to the next value.  You don't have to use it to accomplish this, but it's an option.
+
+```{r}
+people <- c("Aisha", "Daniel", "Priya", NA, "Miguel", "Luca")
+
+# potentially helpful code
+cat("Hi there", "Joe", "\n")  
+
+
+```
+
+Challenge: create several different welcome/hello messages and randomly select one to use with each name.  Look at the `sample()` function to help you with this.
+
+
+## Multiple Conditions
+
+If/else statements can be combined to check multiple conditions:
+
+```{r}
+x <- sample.int(10, 1)
+print(paste("x is", x))
+
+
+if (x == 10) {
+  print("You win the grand prize!")  ## only for x == 10
+} else if (x >= 8) {
+  print("You win the runner up prize.")  ## for x == 9 or x == 8
+} else {
+  print("Sorry, you lose.")
+}
+```
+
+For each value, only one of these print statements can execute.  So while 10 is >= 8, if x is 10, the first print statement will execute, and the "else" to that will not.  
+
+
+## TRY IT
+
+Write a function that returns a letter grade based on the percent (0-100) score provided as input.
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+

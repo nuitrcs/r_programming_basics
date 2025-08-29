@@ -1,0 +1,468 @@
+---
+title: "Writing Functions"
+format: html
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+library(tidyverse)
+```
+
+
+# Writing Functions
+
+You have used many functions in R before.  Now it's time to write your own.  
+
+The main time to write your own function is that when you are repeating the same code with just small variations multiple times -- either in the same file, or across multiple different analyses.  Even if a function does something simple, if you give it a good name, writing code that uses the function might be easier to understand than using some expression directly (such as the example below of converting temperatures). Writing a function will help you keep your code consistent, more readable, and avoid making small mistakes from copying and updating code.
+
+## Syntax
+
+```{r}
+# convert fahrenheit to celsius
+f_to_c <- function(f_temp) {
+  (f_temp - 32) * (5/9)
+}
+
+f_to_c(212)
+```
+
+* `f_to_c` is the name of the function
+* `<-` assignment operator is used to assign the name to the function
+* `function` is itself a function used to create a function!  So it needs to be followed by ()
+* `f_temp` is an argument or input to the function; it's a name we name up and can use within the context of the function
+* `{}` curly braces define all of the statements that make up the function
+* `(f_temp - 32) * (5/9)`: this is the last (only) statement in the function, so the result of this is the return value of the function -- what the output of the function is
+
+In R, we can use the `return()` function to be explicit about what the function returns, or return a value before the full set of statements completes, but it's common to not use `return()` explicitly, especially for short functions.
+
+```{r}
+# explicit return
+f_to_c <- function(f_temp) {
+  return((f_temp - 32) * (5/9))
+}
+
+f_to_c(212)
+```
+
+
+## TRY IT
+
+Write a that computes the proportion of values in a supplied vector that are missing.  A vector to test your function with is provided.
+
+```{r}
+test_vals <- c(0, 3, NA, 4, NA, 2, 6, -1, NA, 3)  # 0.3 missing
+
+```
+
+
+## Multiple Arguments
+
+Functions can take no input arguments (this is unusual), or multiple.
+
+```{r}
+roll_die <- function() {
+  sample(1:6, 1)
+}
+
+roll_die()
+```
+
+```{r}
+roll_dice <- function(n_dice, sides) {
+  sample(1:sides, n_dice, replace=TRUE)
+}
+
+roll_dice(1, 6)
+roll_dice(2, 6)
+roll_dice(2, 20)
+```
+
+
+## Default Values
+
+We can set default values for our arguments -- if no value is supplied, the default is used; but someone can also set a different value:
+
+```{r}
+roll_dice <- function(n_dice, sides=6) {
+  sample(1:sides, n_dice, replace=TRUE)
+}
+
+roll_dice(3)  # uses default sides=6
+roll_dice(1, 20)
+```
+
+
+```{r}
+roll_dice <- function(n_dice=1, sides=6) {
+  sample(1:sides, n_dice, replace=TRUE)
+}
+
+roll_dice()   # uses default for both values
+roll_dice(7)  # uses default sides=6  
+roll_dice(3, 20)
+```
+
+When deciding on the order of the arguments, usually those with default values go after those without, but it doesn't have to be that way.  
+
+
+## TRY IT
+
+Write a function that replaces all "e"s in the supplied text with another character - use "*" as the default replacement character.
+
+```{r}
+# example code you can build from:
+str_replace_all("input text", # input text
+                "in",         # string to replace
+                "999")        # replacement value
+
+```
+
+
+
+## Function Environment 
+
+A function creates it's own mini environment.  Function arguments (the named inputs in the function definition) only exist within the context of the function.  Any variables/functions/objects you create within a function only exist within the context of the function.  They do not persist after the function completes.  
+
+```{r, eval=FALSE}
+my_function <- function() {
+  froggie <- 10
+}
+my_function()
+froggie  # doesn't exist
+```
+
+Functions will look to their own environment first.  If the function defines an argument or variable with the same name as something in the broader environment, it uses the value from the functional object first.
+
+```{r}
+froggie <- "I'm a frog"
+
+my_function <- function() {
+  froggie <- 10
+  print(paste("Froggie is", froggie))
+}
+
+my_function()
+froggie
+```
+
+
+```{r}
+froggie <- "I'm a frog"
+
+my_function <- function(froggie) {
+  print(paste("Froggie is", froggie))
+}
+
+my_function("awesome")
+froggie
+```
+
+If the function doesn't find something with a given name within it's own environment, it will look to it's parent environment (usually the general R environment) to see if there is anything there with the given name and use that.
+
+```{r}
+birdie <- "tweet tweet"
+my_function <- function() {
+  print(birdie) ## no birdie within the function, look outside
+}
+my_function()
+```
+
+BUT, functions CANNOT change the value of objects/variables in the parent environment:
+
+```{r}
+animal <- "cat"
+
+my_function <- function() {
+  animal <- "dog"  # this animal is different than that ^ animal
+}
+
+my_function()
+animal # unchanged
+```
+
+
+```{r}
+my_numbers <- 1:10
+
+my_function <- function() {
+  my_numbers[4] <- 100
+}
+
+my_function()
+my_numbers # unchanged
+```
+
+```{r}
+my_colors <- data.frame(id = 1:5, color = colors()[1:5])
+my_colors
+
+my_function <- function(my_colors) {  # even if passed as input with the same name, it doesn't work
+  my_colors[4,2] <- "pink"
+}
+
+my_function(my_colors)
+my_colors # unchanged
+```
+
+To change an object in the parent environment, you will need to make the function return output, and then save that output:
+
+```{r}
+my_colors <- data.frame(id = 1:5, color = colors()[1:5])
+my_colors
+
+my_function <- function(coldf) {  # even if argument has a different name
+  coldf[4,2] <- "pink"
+  coldf # return the modified data frame
+}
+
+my_function(my_colors) # now has output
+my_colors # unchanged
+my_colors <- my_function(my_colors)
+my_colors # now changed
+```
+
+Note: there is actually a way to have a function change something in the parent environment, but it's usually a bad idea.
+
+## TRY IT
+
+Write a function that takes two arguments: a vector and a threshold.  Change any values in the vector that are below the threshold to the threshold value.  Then use your function to change any negative values in the supplied vector (test_measurements) to 0.
+
+(Yes, you could do this without a function, but we're practicing writing functions.)
+
+```{r}
+test_measurements <- c(-3, 5, 6, 0, -4, -10, 13)
+
+
+```
+
+
+# Functions with Tidyverse
+
+If we want to write functions that take a column name as input, and then do some operation using tidyverse functions withn our functions, we need some special syntax.
+
+Specific example: I want to write a function that will make a histogram (with ggplot2) of a chosen column in my dataset - so that I can have all of the formatting and settings the way I want, and then just call the function to make the plot.
+
+First, what would the plotting code look like?  We'll keep it simple.
+
+The diamonds dataset is part of the ggplot2 package - we'll use it as an example
+
+```{r}
+diamonds
+
+ggplot(diamonds, aes(carat)) +
+  geom_histogram()
+```
+
+How do I turn this into a function?
+
+## Existing Columns as Arguments
+
+I can supply the data frame as an argument:
+
+```{r, eval=FALSE}
+plot_hist <- function(df) {
+  ggplot(df, aes(carat)) +
+    geom_histogram()
+}
+
+plot_hist(diamonds)
+```
+
+But how do I specify the column?
+
+```{r, eval=FALSE}
+plot_hist <- function(df, colname) {
+  ggplot(df, aes(colname)) +
+    geom_histogram()
+}
+
+plot_hist(diamonds, carat)
+```
+
+When R executes the code above, it's looking for an object in the environment named carat - not a column in the diamonds data frame.  Nothing in our `plot_hist()` function associates the `colname` argument with being a column name from `df`.
+
+To do that, we use some special syntax - double curly braces around the column name when we want to use it:
+
+```{r}
+plot_hist <- function(df, colname) {
+  ggplot(df, aes({{colname}})) +
+    geom_histogram()
+}
+
+plot_hist(diamonds, carat)
+```
+
+`{{}}` tells ggplot to look for colname (whatever value it has), as a column in `df` (within `ggplot()`) instead of looking for an independent object with the supplied name.  The syntax is specific to tidyverse packages/functions and those that are explicitly designed to be compatible.  
+
+This does NOT work, because `lm()` isn't a tidyverse compatible function:
+
+```{r, eval=FALSE}
+regress <- function(df, c1, c2) {
+  lm({{c1}} ~ {{c2}}, data=df)
+}
+regress(diamonds, carat, depth)
+```
+
+Note: to use a formula inside a function in a manner similar to this, you generally need to either pass the entire formula, or pass the information as text/character data, and then use some additional functions to convert that to a formula.  Generative AI tools may be helpful if you find yourself needing to do this.
+
+## TRY IT
+
+Write a function that computes the mean of a target variable grouped by a grouping variable.
+
+You can test it with the diamonds data frame.
+
+```{r}
+# Example code to do the computation (cut = grouping var; price = target var)
+diamonds %>% 
+  group_by(cut) %>%
+  summarize(group_mean = mean(price, na.rm=TRUE))
+
+
+```
+
+
+## Creating New Columns
+
+If you want to create a new column in a data frame with a name supplied as a function argument, or modify an existing one, you need some additional syntax to make that happen.
+
+Let's write a function that takes a data frame and a target column, then makes a new column 
+
+```{r}
+add_na_indicator <- function(df, target_col) {
+  df %>%
+    mutate("na_count_{{target_col}}" := as.integer(is.na({{target_col}})))
+}
+
+test_df <- data.frame(
+  id = 1:5,
+  val1 = c(NA, 4, 3, 2, NA),
+  val2 = c("a", NA, "t", "d", NA)
+)
+
+add_na_indicator(test_df, val1)
+```
+
+Two things are different here:
+
+1. We use `:=` to do the assignment in `mutate()`.  Without `:=`, the column would literally be named exactly "na_count_{{target_col}}" (not substituting in the value for `target_col`)
+2. Because we wanted to add a prefix to the supplied column name to make the new column name, we put the expression we want to use inside quotes: `"na_count_{{target_col}}"`
+
+If you want to supply the name of the new column as an input to the function, the syntax is similar:
+
+```{r}
+# Function that replaces missing in a column with the column mean
+
+replace_missing <- function(df, target_col, new_col_name) {
+  colmean <- df %>%
+    summarize(mean({{target_col}}, na.rm=TRUE)) %>%
+    pull() ## gets the single value, outside of a df
+  df %>%
+    mutate({{new_col_name}} := ifelse(is.na({{target_col}}), colmean, {{target_col}}))
+}
+
+test_df <- data.frame(
+  val1 = c(1, 5, 3, NA, 5, 9),
+  val2 = c(NA, 5, 6, 7, 8, 10)
+)
+
+# works whether we quote the new name or not
+replace_missing(test_df, val1, my_new_column)
+replace_missing(test_df, val1, "my_new_column")
+
+```
+
+We don't need quotes ("") around the new column name because we aren't adding any additional text to the value.
+
+We acn also use `{{}}` for default argument values:
+
+```{r}
+replace_missing <- function(df, target_col, new_col_name = {{target_col}}) {
+  colmean <- df %>%
+    summarize(mean({{target_col}}, na.rm=TRUE)) %>%
+    pull() ## gets the single value, outside of a df
+  df %>%
+    mutate({{new_col_name}} := ifelse(is.na({{target_col}}), colmean, {{target_col}}))
+}
+
+replace_missing(test_df, val2)
+```
+
+
+## TRY IT
+
+
+
+# Anonymous Functions
+
+Sometimes, for short function definitions, we can define a function inline as part of another command without naming it (hence anonymous).  These are also called lambda functions.  
+
+This is done whenever a function takes another function as an argument.  If you don't have a pre-existing function (a single function name) to supply because you need to do something slightly more complicated, you need to write a new function.  You can create a new function with a name and use that, but if it's just for a single command, that's often not needed.
+
+A common time this is used is when using dplyr and mutating or summarizing multiple columns.  With base R, the equivalent scenario would be when using a function like `aggregate()` or `apply()` that takes another function as an input, and applies that function to multiple groups in the data.
+
+There are different forms of the syntax for anonymous functions
+
+### Syntax 1
+
+```{r}
+msleep %>%   # dataset from ggplot2
+  summarize(across(everything(), \(x) sum(is.na(x))))
+```
+
+The anonymous function is `\(x) sum(is.na(x))`.  `\()` indicates a function is being created, and `x` is creating the name for an argument.  `sum(is.na(x))` uses the argument `x` to compute a value.
+
+```{r}
+apply(msleep, 2, \(x) sum(is.na(x)))
+```
+
+### Syntax 2
+
+Single line function definition using `function()` without a name
+
+```{r}
+msleep %>%   # dataset from ggplot2
+  summarize(across(everything(), function(x) sum(is.na(x))))
+```
+
+```{r}
+apply(msleep, 2, function(x) sum(is.na(x)))
+```
+
+
+### Syntax 3: Tidyverse Only
+
+The `\(x)` syntax above is now preferred to this, but you may see this in code examples, and it still works.
+
+```{r}
+msleep %>%   # dataset from ggplot2
+  summarize(across(everything(), ~sum(is.na(.x))))
+```
+
+Use a `~` to start the expression, and then use `.` or `.x` to represent an argument to the function.
+
+
+
+# Organizing Function Code
+
+You can define functions in a normal R script file or a Quarto/notebook file.  A function definition is not technically different than other R commands.  But it can be useful to keep them together so you can keep track of them and know what additional functions you have available in your script.
+
+In an R script or Quarto document, it's often useful to keep all of the function definition code near the top of the file.  
+
+If you have more than a few functions, have long function definitions, or are defining functions that you may use with multiple scripts, another good option is to define all of your functions in a separate .R file, and then `source()` that file into the scripts where you want to use the functions.  Put the `source()` command near the top of your file where you load other packages so it's clear you're pulling in code from another file.
+
+If I have a file named `my_functions.R` that contains the code defining several functions, I can use `source("my_functions.R")` to read that code into another script, loading the functions into my environment.  
+
+If your set of functions grows, then consider creating a package instead.  You can create your own R packages that just you or your research group uses.  If you store the code for the package on GitHub, it's easy for others you want to share it with to install it as well.  RStudio has an option to create a new package as one of the choices when creating a new RStudio project, making it fairly easy to get started.  A main advantage of a package is that you write documentation for each function and argument, so you remember how to use them later.
+
+
+## TRY IT
+
+Take several of the functions defined above and put them in a new .R file.  Restart your R session (or at least empty the environment), and then use `source()` to source that code into your current R session.  Then write code to call one of the functions.
+
+```{r}
+
+```
+
+
+

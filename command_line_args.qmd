@@ -1,0 +1,113 @@
+---
+title: "Batch R Scripts"
+format: html
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r}
+library(tidyverse)
+```
+
+
+# Rscript
+
+`Rscript` is a command that is run in a Terminal (not an R console) that will execute a specified R script (a .R file)
+
+## Using Rscript: TRY IT
+
+The provided `script1.R` file has several simple R commands in it.  To execute this from the command line of a computer (such as the Terminal window in RStudio, **NOT** the Console window):
+
+* Use the `cd` command to go to the location of the script (you should be in the correct folder already if you do this within the RStudio project with this file)
+* Type `ls` to list the files in the current directory to make sure you see script1.R
+* Type `Rscript script1.R`
+
+If it executes successfully, the output from the R commands in `script1.R` will be printed to the screen.
+
+Note that just the output of the commands is printed - not the command that produced the output.  
+
+## Command Line Arguments
+
+We can pass information to our script from the command line when we run it.  This is useful if we write a general script that we want to use to do the same thing to different input files or for different values.
+
+See `script2.R` as an example.  
+
+If we run this script with: `Rscript script2.R hippo 3 3.14`
+
+Then the `commandArgs()` function in the script will access those additional input values and you can use them in the script.
+
+Note that all arguments are passed to R as character/text data.  If you want numbers to be treated as numbers, you'll need to use functions like `as.numeric()` and `as.integer()` to convert them.
+
+If the expected number of command line arguments are not supplied, the value `NA` will be substituted.  
+
+Try `Rscript script2.R hippo` to see the behavior.
+
+## TRY IT
+
+Write an R script that takes a name as a command line argument and prints out a message saying hello to the supplied name.  Run the script.
+
+### Optional Arguments
+
+To make some command line arguments optional, use if/else statements in the script.  See `script3.R` for an example.
+
+```
+Rscript script3.R 4 5
+Rscript script3.R 4
+```
+
+
+## Named Command Line Arguments
+
+To name the arguments on the command line, and include other functionality that you might be familiar with from other programming languages, you'll need to use an external package.  
+
+One option for this is [optparse](https://github.com/trevorld/r-optparse).
+
+```{r, eval=FALSE}
+install.packages("optparse")
+```
+
+See `script4.R` for an example.
+
+It includes options to specify the data types of the inputs, use command line flags, and write help messages.  If you're developing scripts for others to use, adding this level of detail can be very helpful.
+
+```
+Rscript script4.R --help
+Rscript script4.R --friendly --count=3
+Rscript script4.R -y -c 10
+Rscript script4.R
+```
+
+
+## TRY IT
+
+Write a script that takes the name of one of the datasets from the tidyverse package (diamonds, mpg, midwest, msleep, etc.) and the name of a column in the data frame as arguments.  Generate a histogram or bar plot of the variable (depending on it's type -- or create a flag for the script for the user to indicate histogram or bar plot), and save it to a file.  
+
+Add in some checks for whether the column name is valid, whether the dataset exists, etc.
+
+Make sure to load the tidyverse package so that the datasets will be available.
+
+Run your script to test it!  It's completely normal for it to take multiple iterations and attempts to get everything working.  It's best to tackle and test things step by step, instead of trying to write it all at once.  Generative AI tools (Claude, ChatGPT, etc.) can be helpful with this type of task.
+
+
+## Managing Script Output
+
+Any commands that produce output in the script will print that output.  Mostly, R scripts should have commands that do not produce much output.  
+
+To save the output, you can redirect it to another file:
+
+```
+Rscript script2.R hippo 3 3.14 > script2.log
+```
+
+If you run the script as a batch job on Quest, the output will automatically be directed to a log file.  
+
+It's advisable to write important results or output to a file directly in the script though using functions like `write_csv()` or `write()`.
+
+You can also save the entire environment with `save.image(file="script_output.RData")`.  This is useful if you are creating multiple objects and saving complex objects that result from long-running scripts (like machine learning models).
+
+     
+
+
+
+
